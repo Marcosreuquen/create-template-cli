@@ -1,0 +1,167 @@
+[
+  {
+      "name": "app.js",
+      "type": "file",
+      "values": "..."
+  },
+  {
+      "name": "bin",
+      "type": "folder",
+      "values": [
+          {
+              "name": "www",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  },
+  {
+      "name": "config",
+      "type": "folder",
+      "values": [
+          {
+              "name": "config.js",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  },
+  {
+      "name": "controllers",
+      "type": "folder",
+      "values": [
+          {
+              "name": "customer.js",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "product.js",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "middleware",
+              "type": "folder",
+              "values": [
+                  {
+                      "name": "auth.js",
+                      "type": "file",
+                      "values": "..."
+                  },
+                  {
+                      "name": "logger.js",
+                      "type": "file",
+                      "values": "..."
+                  }
+              ]
+          }
+      ]
+  },
+  {
+      "name": "models",
+      "type": "folder",
+      "values": [
+          {
+              "name": "customer.js",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "product.js",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  },
+  {
+      "name": "routes",
+      "type": "folder",
+      "values": [
+          {
+              "name": "api.js",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "auth.js",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  },
+  {
+      "name": "public",
+      "type": "folder",
+      "values": [
+          {
+              "name": "css",
+              "type": "folder",
+              "values": []
+          },
+          {
+              "name": "js",
+              "type": "folder",
+              "values": []
+          },
+          {
+              "name": "images",
+              "type": "folder",
+              "values": []
+          }
+      ]
+  },
+  {
+      "name": "views",
+      "type": "folder",
+      "values": [
+          {
+              "name": "index.ejs",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "product.ejs",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  },
+  {
+      "name": "tests",
+      "type": "folder",
+      "values": [
+          {
+              "name": "unit",
+              "type": "folder",
+              "values": []
+          },
+          {
+              "name": "integration",
+              "type": "folder",
+              "values": []
+          },
+          {
+              "name": "e2e",
+              "type": "folder",
+              "values": []
+          }
+      ]
+  },
+  {
+      "name": "utils",
+      "type": "folder",
+      "values": [
+          {
+              "name": "validation.js",
+              "type": "file",
+              "values": "..."
+          },
+          {
+              "name": "helpers.js",
+              "type": "file",
+              "values": "..."
+          }
+      ]
+  }
+]
