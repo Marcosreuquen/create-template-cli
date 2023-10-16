@@ -1,0 +1,118 @@
+[
+    {
+        "name": "config.py",
+        "type": "file",
+        "values": "\n# import os \nfrom pydantic import BaseSettings \n \n# DB_URL = os.getenv(\"DB_URL\") \n# DB_HOST = os.getenv(\"DB_HOST\") \n# DB_NAME = os.getenv(\"DB_NAME\") \n# DB_USER = os.getenv(\"DB_USER\") \n# DB_PASS = os.getenv(\"DB_PASS\") \n# SECRET_KEY = os.getenv(\"SECRET_KEY\") \n# ALGORITHM = os.getenv(\"ALGORITHM\") \n# ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\") \n \n \nclass Settings(BaseSettings): \n\tDB_URL: str \n\tSECRET_KEY: str \n\tALGORITHM: str \n\tACCESS_TOKEN_EXPIRE_MINUTES: int \n \n\tclass Config: \n\t\tenv_file = \".env\" \n \n \nsettings = Settings()"
+    },
+    {
+        "name": "app",
+        "type": "folder",
+        "values": [
+            {
+                "name": "main.py",
+                "type": "file",
+                "values": "from fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom .routers import post, user, auth, vote\n\n\nroutes = [post, user, auth, vote]\n\napp = FastAPI()\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\nfor model in routes:\n    print(\"Adding \", model, \" to the router.\")\n    app.include_router(model.router)\n\n\n@app.get(\"/\")\nasync def root():\n    return {\"message\": \"Hello World\"}"
+            },
+            {
+                "name": "controllers",
+                "type": "folder",
+                "values": [
+                    {
+                        "name": "posts.py",
+                        "type": "file",
+                        "values": " from ..models import models \nfrom ..utils import schemas \nfrom fastapi import Depends, HTTPException, Response, status \nfrom sqlalchemy.orm import Session \nfrom ..models.database import get_db \nfrom typing import Optional \nfrom uuid import UUID \nfrom sqlalchemy import func \n \n \nasync def get_posts( \n\tdb: Session, \n\tlimit: int = 10, \n\toffset: int = 0, \n\tsearch: Optional[str] = \"\", \n): \n\tresults = ( \n\t\tdb.query(models.Post, func.count(models.Vote.post_id).label(\"votes\")) \n\t\t.join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True) \n\t\t.group_by(models.Post.id) \n\t\t.filter(models.Post.title.contains(search)) \n\t\t.limit(limit) \n\t\t.offset(offset) \n\t\t.all() \n\t) \n\treturn results \n \n \nasync def get_post(db: Session, id: UUID): \n\tpost = ( \n\t\tdb.query(models.Post, func.count(models.Vote.post_id).label(\"votes\")) \n\t\t.join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True) \n\t\t.group_by(models.Post.id) \n\t\t.filter(models.Post.id == id) \n\t\t.first() \n\t) \n\treturn post \n \n \nasync def create_post(db: Session, data: dict, user_id: UUID): \n\tnew_post = models.Post(data) \n\tnew_post.owner_id = user_id \n\tdb.add(new_post) \n\tdb.commit() \n\tdb.refresh(new_post) \n\treturn new_post \n \n \nasync def delete_post(db: Session, id: UUID, user: models.User): \n\tpost_query = db.query(models.Post).filter(models.Post.id == id) \n \n\tpost = post_query.first() \n \n\tif post is None: \n\t\traise HTTPException( \n\t\t\tstatus_code=status.HTTP_404_NOT_FOUND, detail=f\"Post {id} does not exist\" \n\t\t) \n \n\tif post.owner_id != user.id: \n\t\traise HTTPException( \n\t\t\tstatus_code=status.HTTP_403_FORBIDDEN, \n\t\t\tdetail=\"Not authorized to perform requested action\", \n\t\t) \n \n\tpost_query.delete(synchronize_session=False) \n\tdb.commit() \n\treturn Response(status_code=status.HTTP_204_NO_CONTENT) \n \n \ndef update_post( \n\tdb: Session, \n\tid: UUID, \n\tdata: schemas.PostCreate, \n\tuser_id: UUID, \n): \n\tquery = db.query(models.Post).filter(models.Post.id == id) \n\tpost = query.first() \n\tif post is None: \n\t\traise HTTPException( \n\t\t\tstatus_code=status.HTTP_404_NOT_FOUND, detail=f\"Post {id} does not exist\" \n\t\t) \n\tif post.owner_id != user_id: \n\t\traise HTTPException( \n\t\t\tstatus_code=status.HTTP_403_FORBIDDEN, \n\t\t\tdetail=\"Not authorized to perform requested action\", \n\t\t) \n \n\tquery.update(data, synchronize_session=False) \n\tdb.commit() \n\treturn query.first()"
+                    },
+                    {
+                        "name": "users.py",
+                        "type": "file",
+                        "values": "..."
+                    }
+                ]
+            },
+            {
+                "name": "models",
+                "type": "folder",
+                "values": [
+                    {
+                        "name": "database.py",
+                        "type": "file",
+                        "values": "\nfrom sqlalchemy import create_engine \nfrom sqlalchemy.ext.declarative import declarative_base \nfrom sqlalchemy.orm import sessionmaker \nfrom config import settings \n \nengine = create_engine(settings.DB_URL) \nSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) \nBase = declarative_base() \n \n \ndef get_db(): \n\tdb = SessionLocal() \n\ttry: \n\t\tyield db \n\tfinally: \n\t\tdb.close()"
+                    },
+                    {
+                        "name": "schemas.py",
+                        "type": "file",
+                        "values": "from typing import Optional \nfrom uuid import UUID \nfrom pydantic import BaseModel \nfrom datetime import datetime \n \nclass PostBase(BaseModel): \n\ttitle: str \n\tcontent: str \n\tpublished: bool = True \n \n \nclass PostCreate(PostBase): \n\tpass \n \n \nclass PostResponse(PostBase): \n\tid: UUID \n\tcreated_at: datetime \n\towner_id: UUID \n\towner: UserResponse \n \n\tclass Config: \n\t\torm_mode = True \n \n \nclass PostOut(BaseModel): \n\tPost: PostResponse \n\tvotes: Optional[int] \n \n\tclass Config: \n\t\torm_mode = True"
+                    },
+                    {
+                        "name": "models.py",
+                        "type": "file",
+                        "values": "from sqlalchemy import Column, ForeignKey, String, Boolean \nfrom sqlalchemy.sql.sqltypes import TIMESTAMP \nfrom sqlalchemy.sql.expression import text \nfrom .database import Base \nfrom sqlalchemy.orm import relationship \nimport uuid \n \n \nclass Post(Base): \n\t__tablename__ = \"posts\" \n \n\tid = Column( \n\t\tString, primary_key=True, default=str(uuid.uuid4()), unique=True, index=True \n\t) \n\ttitle = Column(String, nullable=False) \n\tcontent = Column(String, nullable=False) \n\tpublished = Column(Boolean, server_default=\"True\") \n\tcreated_at = Column( \n\t\tTIMESTAMP(timezone=True), nullable=False, server_default=text(\"now()\") \n\t)"
+                    }
+                ]
+            },
+            {
+                "name": "routers",
+                "type": "folder",
+                "values": [
+                    {
+                        "name": "post.py",
+                        "type": "file",
+                        "values": "from ..utils import oauth2 \nfrom ..models import models \nfrom fastapi import Depends, HTTPException, Response, status, APIRouter \nfrom typing import List, Optional \nfrom uuid import UUID \nfrom sqlalchemy.orm import Session \nfrom ..utils import schemas \nfrom ..controllers import posts \nfrom ..models import database \n \nrouter = APIRouter(prefix=\"/posts\", tags=[\"Posts\"]) \n \n \n@router.get(\"/\", response_model=List[schemas.PostOut]) \nasync def get_posts( \n\tlimit: int = 10, \n\toffset: int = 0, \n\tsearch: Optional[str] = \"\", \n\tdb: Session = Depends(database.get_db), \n): \n\tresults = await posts.get_posts(db, limit, offset, search) \n\treturn results \n \n \n@router.get(\"/{id}\", response_model=schemas.PostOut) \nasync def get_post( \n\tid: UUID, \n\tresponse: Response, \n\tdb: Session = Depends(database.get_db), \n): \n\tpost = await posts.get_post(db, id) \n\tif not post: \n\t\traise HTTPException( \n\t\t\tstatus_code=status.HTTP_404_NOT_FOUND, detail=f\"Post {id} was not found\" \n\t\t) \n\treturn post \n \n \n@router.post( \n\t\"/\", \n\tstatus_code=status.HTTP_201_CREATED, \n\tresponse_model=schemas.PostResponse, \n) \nasync def create_post( \n\tpost: schemas.PostCreate, \n\tuser: models.User = Depends(oauth2.get_current_user), \n\tdb: Session = Depends(database.get_db), \n): \n\tnew_post: models.Post = await posts.create_post( \n\t\tdb, **{\"data\": post.dict(), \"user_id\": user.id} \n\t) \n\treturn new_post \n \n \n@router.delete(\"/{id}\", status_code=status.HTTP_204_NO_CONTENT) \nasync def delete_post( \n\tid: UUID, \n\tuser: models.User = Depends(oauth2.get_current_user), \n\tdb: Session = Depends(database.get_db), \n): \n\treturn await posts.delete_post(db, id, user) \n \n \n@router.put(\"/{id}\", response_model=schemas.PostResponse) \nasync def update_post( \n\tid: UUID, \n\tdata: schemas.PostCreate, \n\tuser: models.User = Depends(oauth2.get_current_user), \n\tdb: Session = Depends(database.get_db), \n): \n\tupdated_post = posts.update_post(db, id, data.dict(), user.id) \n\treturn updated_post"
+                    }
+                ]
+            },
+            {
+                "name": "utils",
+                "type": "folder",
+                "values": [
+                    {
+                        "name": "hash.py",
+                        "type": "file",
+                        "values": "..."
+                    },
+                    {
+                        "name": "jwt.py",
+                        "type": "file",
+                        "values": "\nfrom passlib.context import CryptContext \n \npwd_context = CryptContext(schemes=[\"bcrypt\"], deprecated=\"auto\") \n \n \ndef hash(password: str): \n\treturn pwd_context.hash(password) \n \n \ndef verify(plan_password, hashed_password): \n\treturn pwd_context.verify(plan_password, hashed_password)"
+                    },
+                    {
+                        "name": "oauth.py",
+                        "type": "file",
+                        "values": "..."
+                    }
+                ]
+            },
+            {
+                "name": "middlewares",
+                "type": "folder",
+                "values": [
+                    {
+                        "name": "auth.py",
+                        "type": "file",
+                        "values": "..."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Dockerfile",
+        "type": "file",
+        "values": " FROM python:3.10.6\nWORKDIR /usr/src/app\nCOPY requirements.txt ./\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD [ \"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\" ]"
+    },
+    {
+        "name": "requirements.txt",
+        "type": "file",
+        "values": " \nalembic==1.8.1 \nanyio==3.6.1 \nautopep8==1.7.0 \nbcrypt==4.0.0 \nblack==22.10.0 \ncffi==1.15.1 \nclick==8.1.3 \ncryptography==38.0.1 \ndnspython==2.2.1 \necdsa==0.18.0 \nemail-validator==1.3.0 \nfastapi==0.85.0 \nflake8==5.0.4 \ngreenlet==1.1.3 \ngunicorn==20.1.0 \nh11==0.14.0 \nhttptools==0.5.0 \nidna==3.4 \nMako==1.2.3 \nMarkupSafe==2.1.1 \nmccabe==0.7.0 \nmypy-extensions==0.4.3 \nnumpy==1.23.3 \npasslib==1.7.4 \npathspec==0.10.1 \nplatformdirs==2.5.2 \npsycopg2-binary==2.9.4 \npyasn1==0.4.8 \npycodestyle==2.9.1 \npycparser==2.21 \npydantic==1.10.2 \npyflakes==2.5.0 \npython-dotenv==0.21.0 \npython-jose==3.3.0 \npython-multipart==0.0.5 \nPyYAML==6.0 \nrsa==4.9 \nscipy==1.9.2 \nsix==1.16.0 \nsniffio==1.3.0 \nSQLAlchemy==1.4.41 \nstarlette==0.20.4 \ntoml==0.10.2 \ntomli==2.0.1 \ntyping_extensions==4.3.0 \nuvicorn==0.18.3 \nuvloop==0.17.0 \nuvtools==0.1.0 \nwatchfiles==0.17.0 \nwebsockets==10.3 "
+    },
+    {
+        "name": ".gitignore",
+        "type": "file",
+        "values": " \n.env \nvenv \nfastapi.session.sql \n.vscode \n__pycache__ "
+    },
+    {
+        "name": "README.md",
+        "type": "file",
+        "values": "..."
+    }
+]

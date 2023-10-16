@@ -1,0 +1,114 @@
+[
+  {
+    "name": ".eslintrc.json",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": ".gitignore",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "README.md",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "next-env.d.ts",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "next.config.js",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "package.json",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "tsconfig.json",
+    "type": "file",
+    "values": "..."
+  },
+  {
+    "name": "pages",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.tsx",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "lib",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.ts",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "ui",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.tsx",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "styles",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.css",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "public",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.html",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "components",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.tsx",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  },
+  {
+    "name": "hooks",
+    "type": "folder",
+    "values": [
+      {
+        "name": "index.tsx",
+        "type": "file",
+        "values": "..."
+      }
+    ]
+  }
+]

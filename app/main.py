@@ -3,18 +3,30 @@ import os
 import shutil
 import json
 
-parser = argparse.ArgumentParser(description="API Template Generator")
-parser.add_argument(
-    "--type",
-    choices=["restful", "express"],
-    required=True,
-    help="API type")
-parser.add_argument(
-    "--output",
-    required=False,
-    help="Output directory",
-    default="./dist")
-args = parser.parse_args()
+
+def get_available_templates(templates_dir):
+    types = []
+    available_templates = os.listdir(templates_dir)
+    for template in available_templates:
+        if template.endswith(".json"):
+            type_name = template.removesuffix(".json")
+            types.append(type_name)
+    return types
+
+
+def get_args(types):
+    parser = argparse.ArgumentParser(description="API Template Generator")
+    parser.add_argument(
+        "--type", "-t",
+        choices=types,
+        required=True,
+        help="API type")
+    parser.add_argument(
+        "--output", "-o",
+        required=False,
+        help="Output directory",
+        default="./dist")
+    return parser.parse_args()
 
 
 def create_dist_folder(dist_folder="./dist"):
@@ -50,7 +62,8 @@ def create_directory_structure_from_json(data, base_dir="."):
 
 
 if __name__ == "__main__":
-    args = parser.parse_args()
+    templates = get_available_templates("./templates")
+    args = get_args(templates)
     create_dist_folder(args.output)
     with open("./templates/{}.json".format(args.type), "r") as json_file:
         directory_structure_json = json.load(json_file)
