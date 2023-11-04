@@ -29,7 +29,7 @@ jobs:
         python-version: 3.x
 
     - name: Install apturl
-      run: apt update && sudo apt install -y apturl
+      run: sudo apt update && sudo apt install -y apturl
 
     - name: Update pip
       run: pip install --upgrade pip
