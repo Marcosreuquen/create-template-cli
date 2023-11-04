@@ -15,17 +15,25 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.10.12
-    
+        python-version: 3.x
+
     - name: Install apturl
       run: apt install apturl
 
     - name: Update pip
       run: pip install --upgrade pip
+
     - name: Install dependencies
       run: pip install -r requirements.txt
     
